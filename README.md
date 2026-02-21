@@ -96,8 +96,7 @@ Then point your agent at this repo and ask it to install the skill.
 ### Status
 
 ```bash
-./scripts/pool-status.sh              # Formatted summary
-./scripts/pool-status.sh --config     # With equipment names from pool config
+./scripts/pool-status.sh              # Formatted summary with equipment names
 ./scripts/pool-status.sh --raw        # Raw JSON from the API
 ```
 

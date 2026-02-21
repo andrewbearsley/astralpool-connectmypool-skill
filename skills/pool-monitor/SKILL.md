@@ -513,7 +513,7 @@ Requires `POOL_WEB_USER` and `POOL_WEB_PASS` environment variables. Rate limit: 
 
 Three helper scripts are available in the skill's parent project:
 
-- **`scripts/pool-status.sh`** -- Formatted pool status summary (REST API). Run with `--config` for equipment names.
+- **`scripts/pool-status.sh`** -- Formatted pool status summary with equipment names (REST API).
 - **`scripts/pool-action.sh`** -- Named pool actions with validation. Run with `--help` for usage.
 - **`scripts/pool-chemistry.sh`** -- pH and ORP readings (web scrape). Run with `--json` for machine-readable output.
 

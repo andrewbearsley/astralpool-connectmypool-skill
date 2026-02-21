@@ -2,8 +2,7 @@
 #
 # pool-status.sh - Query pool status and configuration from ConnectMyPool API
 #
-# Usage: ./pool-status.sh [--config] [--raw]
-#   --config  Also fetch pool configuration (equipment list)
+# Usage: ./pool-status.sh [--raw]
 #   --raw     Output raw JSON instead of formatted summary
 #
 # Requires: curl, jq
@@ -14,16 +13,13 @@ set -euo pipefail
 API_BASE="https://www.connectmypool.com.au"
 POOL_API_CODE="${POOL_API_CODE:?Error: POOL_API_CODE environment variable is not set}"
 
-SHOW_CONFIG=false
 RAW_OUTPUT=false
 
 for arg in "$@"; do
   case "$arg" in
-    --config) SHOW_CONFIG=true ;;
     --raw)    RAW_OUTPUT=true ;;
     --help|-h)
-      echo "Usage: $0 [--config] [--raw]"
-      echo "  --config  Also fetch pool configuration (equipment list)"
+      echo "Usage: $0 [--raw]"
       echo "  --raw     Output raw JSON instead of formatted summary"
       echo ""
       echo "Environment: POOL_API_CODE (required)"
@@ -150,24 +146,19 @@ STATUS_JSON=$(api_post "${API_BASE}/api/poolstatus" \
   "$(jq -n --arg code "$POOL_API_CODE" '{pool_api_code: $code, temperature_scale: 0}')") || exit 1
 check_api_error "$STATUS_JSON" || exit 1
 
-CONFIG_JSON=""
-if $SHOW_CONFIG; then
-  echo "Fetching pool configuration..."
-  CONFIG_JSON=$(api_post "${API_BASE}/api/poolconfig" \
-    "$(jq -n --arg code "$POOL_API_CODE" '{pool_api_code: $code}')") || exit 1
-  check_api_error "$CONFIG_JSON" || exit 1
-fi
+echo "Fetching pool configuration..."
+CONFIG_JSON=$(api_post "${API_BASE}/api/poolconfig" \
+  "$(jq -n --arg code "$POOL_API_CODE" '{pool_api_code: $code}')") || exit 1
+check_api_error "$CONFIG_JSON" || exit 1
 
 # --- Output ---
 
 if $RAW_OUTPUT; then
   echo "=== Pool Status ==="
   echo "$STATUS_JSON" | jq .
-  if [ -n "$CONFIG_JSON" ]; then
-    echo ""
-    echo "=== Pool Configuration ==="
-    echo "$CONFIG_JSON" | jq .
-  fi
+  echo ""
+  echo "=== Pool Configuration ==="
+  echo "$CONFIG_JSON" | jq .
   exit 0
 fi
 
@@ -240,21 +231,13 @@ if [ "$CHANNEL_COUNT" -gt 0 ]; then
     NUM=$(echo "$STATUS_JSON" | jq -r ".channels[$i].channel_number")
     MODE=$(echo "$STATUS_JSON" | jq -r ".channels[$i].mode")
 
-    # Try to get name from config if available
-    NAME=""
-    if [ -n "$CONFIG_JSON" ]; then
-      NAME=$(echo "$CONFIG_JSON" | jq -r ".channels[] | select(.channel_number == $NUM) | .name // empty" 2>/dev/null)
-      FUNC=$(echo "$CONFIG_JSON" | jq -r ".channels[] | select(.channel_number == $NUM) | .function // empty" 2>/dev/null)
-      if [ -z "$NAME" ] && [ -n "$FUNC" ]; then
-        NAME=$(channel_function_name "$FUNC")
-      fi
+    NAME=$(echo "$CONFIG_JSON" | jq -r --argjson n "$NUM" '.channels[] | select(.channel_number == $n) | .name // empty' 2>/dev/null)
+    FUNC=$(echo "$CONFIG_JSON" | jq -r --argjson n "$NUM" '.channels[] | select(.channel_number == $n) | .function // empty' 2>/dev/null)
+    if [ -z "$NAME" ] && [ -n "$FUNC" ]; then
+      NAME=$(channel_function_name "$FUNC")
     fi
-
-    if [ -n "$NAME" ]; then
-      echo "    ${NAME} (#${NUM}): $(channel_mode_name "$MODE")"
-    else
-      echo "    Channel ${NUM}: $(channel_mode_name "$MODE")"
-    fi
+    NAME="${NAME:-Channel ${NUM}}"
+    echo "    ${NAME}: $(channel_mode_name "$MODE")"
   done
 fi
 
@@ -267,16 +250,9 @@ if [ "$VALVE_COUNT" -gt 0 ]; then
     NUM=$(echo "$STATUS_JSON" | jq -r ".valves[$i].valve_number")
     MODE=$(echo "$STATUS_JSON" | jq -r ".valves[$i].mode")
 
-    NAME=""
-    if [ -n "$CONFIG_JSON" ]; then
-      NAME=$(echo "$CONFIG_JSON" | jq -r ".valves[] | select(.valve_number == $NUM) | .name // empty" 2>/dev/null)
-    fi
-
-    if [ -n "$NAME" ]; then
-      echo "    ${NAME} (#${NUM}): $(valve_mode_name "$MODE")"
-    else
-      echo "    Valve ${NUM}: $(valve_mode_name "$MODE")"
-    fi
+    NAME=$(echo "$CONFIG_JSON" | jq -r --argjson n "$NUM" '.valves[] | select(.valve_number == $n) | .name // empty' 2>/dev/null)
+    NAME="${NAME:-Valve ${NUM}}"
+    echo "    ${NAME}: $(valve_mode_name "$MODE")"
   done
 fi
 
@@ -290,17 +266,9 @@ if [ "$LIGHT_COUNT" -gt 0 ]; then
     MODE=$(echo "$STATUS_JSON" | jq -r ".lighting_zones[$i].mode")
     COLOR=$(echo "$STATUS_JSON" | jq -r ".lighting_zones[$i].color // empty")
 
-    NAME=""
-    if [ -n "$CONFIG_JSON" ]; then
-      NAME=$(echo "$CONFIG_JSON" | jq -r ".lighting_zones[] | select(.lighting_zone_number == $NUM) | .name // empty" 2>/dev/null)
-    fi
-
-    LINE=""
-    if [ -n "$NAME" ]; then
-      LINE="    ${NAME} (#${NUM}): $(lighting_mode_name "$MODE")"
-    else
-      LINE="    Light ${NUM}: $(lighting_mode_name "$MODE")"
-    fi
+    NAME=$(echo "$CONFIG_JSON" | jq -r --argjson n "$NUM" '.lighting_zones[] | select(.lighting_zone_number == $n) | .name // empty' 2>/dev/null)
+    NAME="${NAME:-Light ${NUM}}"
+    LINE="    ${NAME}: $(lighting_mode_name "$MODE")"
 
     if [ -n "$COLOR" ] && [ "$COLOR" != "null" ]; then
       LINE="${LINE} (color: ${COLOR})"
