@@ -1,0 +1,30 @@
+# Credentials & sessions
+.env
+*.key
+credentials.*
+*-session-cookies*
+
+# AI agent / IDE config
+CLAUDE.md
+.claude/
+.cursorrules
+.cursor/
+.aider*
+.copilot/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vendor docs (not for redistribution)
+astral-examples/
+
+# Temp
+/tmp/
+*.tmp
