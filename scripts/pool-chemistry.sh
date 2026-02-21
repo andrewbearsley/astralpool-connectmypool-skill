@@ -45,7 +45,9 @@ for arg in "$@"; do
   esac
 done
 
-python3 - "$POOL_WEB_USER" "$POOL_WEB_PASS" "$OUTPUT_MODE" "$POOL_SESSION_FILE" << 'PYEOF'
+POOL_WEB_USER="$POOL_WEB_USER" POOL_WEB_PASS="$POOL_WEB_PASS" \
+  POOL_OUTPUT_MODE="$OUTPUT_MODE" POOL_SESSION_FILE="$POOL_SESSION_FILE" \
+  python3 - << 'PYEOF'
 import sys
 import os
 import urllib.request
@@ -57,10 +59,10 @@ import json
 import time
 from datetime import datetime
 
-username = sys.argv[1]
-password = sys.argv[2]
-output_mode = sys.argv[3]
-session_file = sys.argv[4]
+username = os.environ['POOL_WEB_USER']
+password = os.environ['POOL_WEB_PASS']
+output_mode = os.environ['POOL_OUTPUT_MODE']
+session_file = os.environ['POOL_SESSION_FILE']
 
 BASE_URL = "https://www.connectmypool.com.au"
 

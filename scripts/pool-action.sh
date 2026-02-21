@@ -68,6 +68,10 @@ COMMAND="${ARGS[0]}"
 
 # --- Helper functions ---
 
+status_payload() {
+  jq -n --arg code "$POOL_API_CODE" '{pool_api_code: $code, temperature_scale: 0}'
+}
+
 confirm() {
   if $SKIP_CONFIRM; then return 0; fi
   echo ""
@@ -134,7 +138,7 @@ check_action_status() {
 
   RESPONSE=$(curl -sf -X POST "${API_BASE}/api/poolactionstatus" \
     -H "Content-Type: application/json" \
-    -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"action_number\": ${action_number}}" 2>&1) || {
+    -d "$(jq -n --arg code "$POOL_API_CODE" --argjson num "$action_number" '{pool_api_code: $code, action_number: $num}')" 2>&1) || {
     echo "Error: API request failed" >&2
     echo "$RESPONSE" >&2
     exit 1
@@ -216,11 +220,11 @@ case "$COMMAND" in
     # Get current mode from pool status
     STATUS=$(curl -sf -X POST "${API_BASE}/api/poolstatus" \
       -H "Content-Type: application/json" \
-      -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}" 2>&1) || {
+      -d "$(status_payload)" 2>&1) || {
       echo "Error: Could not fetch pool status" >&2; exit 1
     }
 
-    CURRENT_MODE=$(echo "$STATUS" | jq -r ".channels[] | select(.channel_number == $CHANNEL) | .mode")
+    CURRENT_MODE=$(echo "$STATUS" | jq -r --argjson ch "$CHANNEL" '.channels[] | select(.channel_number == $ch) | .mode')
     if [ -z "$CURRENT_MODE" ] || [ "$CURRENT_MODE" = "null" ]; then
       echo "Error: Channel $CHANNEL not found in pool status" >&2; exit 1
     fi
@@ -276,10 +280,10 @@ case "$COMMAND" in
     sleep 5
     STATUS=$(curl -sf -X POST "${API_BASE}/api/poolstatus" \
       -H "Content-Type: application/json" \
-      -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}" 2>&1) || {
+      -d "$(status_payload)" 2>&1) || {
       echo "Warning: Could not verify final mode" >&2; exit 0
     }
-    FINAL_MODE=$(echo "$STATUS" | jq -r ".channels[] | select(.channel_number == $CHANNEL) | .mode")
+    FINAL_MODE=$(echo "$STATUS" | jq -r --argjson ch "$CHANNEL" '.channels[] | select(.channel_number == $ch) | .mode')
     if [ "$FINAL_MODE" -eq "$TARGET_MODE" ]; then
       echo "Confirmed: channel $CHANNEL is now in ${TARGET_STR} mode."
     else
@@ -377,7 +381,7 @@ case "$COMMAND" in
     HEATER_ON=false
     STATUS=$(curl -sf -X POST "${API_BASE}/api/poolstatus" \
       -H "Content-Type: application/json" \
-      -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}" 2>/dev/null) && {
+      -d "$(status_payload)" 2>/dev/null) && {
       HEATER_MODE=$(echo "$STATUS" | jq -r '.heaters[0].mode // 0')
       [ "$HEATER_MODE" = "1" ] && HEATER_ON=true
     }
@@ -418,7 +422,7 @@ case "$COMMAND" in
     HEATER_ON=false
     STATUS=$(curl -sf -X POST "${API_BASE}/api/poolstatus" \
       -H "Content-Type: application/json" \
-      -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}" 2>/dev/null) && {
+      -d "$(status_payload)" 2>/dev/null) && {
       HEATER_MODE=$(echo "$STATUS" | jq -r '.heaters[0].mode // 0')
       [ "$HEATER_MODE" = "1" ] && HEATER_ON=true
     }

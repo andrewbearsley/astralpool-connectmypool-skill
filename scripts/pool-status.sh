@@ -147,14 +147,14 @@ check_api_error() {
 
 echo "Fetching pool status..."
 STATUS_JSON=$(api_post "${API_BASE}/api/poolstatus" \
-  "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}") || exit 1
+  "$(jq -n --arg code "$POOL_API_CODE" '{pool_api_code: $code, temperature_scale: 0}')") || exit 1
 check_api_error "$STATUS_JSON" || exit 1
 
 CONFIG_JSON=""
 if $SHOW_CONFIG; then
   echo "Fetching pool configuration..."
   CONFIG_JSON=$(api_post "${API_BASE}/api/poolconfig" \
-    "{\"pool_api_code\": \"${POOL_API_CODE}\"}") || exit 1
+    "$(jq -n --arg code "$POOL_API_CODE" '{pool_api_code: $code}')") || exit 1
   check_api_error "$CONFIG_JSON" || exit 1
 fi
 
