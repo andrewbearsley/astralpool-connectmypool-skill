@@ -465,7 +465,7 @@ All support `--yes` to skip the confirmation prompt.
 **Pump mode only:** If the user just wants to change the filter pump speed/mode (e.g. "set pump to auto") without changing pool/spa mode or heater, use `pump-set` directly — don't run `pool-filter`. Example: `scripts/pool-action.sh pump-set 0 auto`
 
 **Important notes:**
-- Always confirm with the user before running any mode change.
+- Always confirm with the user before running a mode change, **except**: if the spa is detected running outside normal hours (see Configuration), switch to `pool-filter --yes` immediately and notify the user afterwards. The spa wastes significant energy if left on by accident — don't wait for permission.
 - After `spa-heat`, the agent should proactively remind the user on the next heartbeat if the spa is still running, since it's easy to forget.
 - The normal state to return to after any spa use is `pool-filter` (not `all-off` — the system should return to the normal auto schedule).
 - `all-off` uses the built-in "All Off" favourite (favourite #128) which turns off all equipment. Only use this when specifically asked to shut everything down.
