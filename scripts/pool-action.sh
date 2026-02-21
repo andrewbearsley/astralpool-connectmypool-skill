@@ -234,16 +234,11 @@ case "$COMMAND" in
       exit 0
     fi
 
-    # Cycle order: 0(Off) -> 2(On) -> 1(Auto) -> 3(Low) -> 4(Medium) -> 5(High) -> 0(Off)
-    # Map each mode value to its position in the cycle
+    # Cycle order: 0(Off) -> 1(Auto) -> 2(On) -> 3(Low) -> 4(Medium) -> 5(High) -> 0(Off)
+    # Mode values happen to match cycle position (0-5)
     cycle_pos() {
       case "$1" in
-        0) echo 0 ;; # Off
-        2) echo 1 ;; # On
-        1) echo 2 ;; # Auto
-        3) echo 3 ;; # Low
-        4) echo 4 ;; # Medium
-        5) echo 5 ;; # High
+        0|1|2|3|4|5) echo "$1" ;;
         *) echo -1 ;;
       esac
     }

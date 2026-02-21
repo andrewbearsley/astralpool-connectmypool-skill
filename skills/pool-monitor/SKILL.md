@@ -348,7 +348,7 @@ If the response contains `failure_code`, handle it:
 Extract from the successful response:
 - `temperature` -- current water temperature
 - `heaters[]` -- each heater's mode and set_temperature
-- `channels[]` -- each channel's mode (cross-reference with poolconfig for names/functions)
+- `channels[]` -- each channel's mode. **Always cross-reference with poolconfig to get channel names** (e.g. "Filter Pump", "Blower") — never report raw channel numbers to the user
 - `valves[]` -- each valve's mode
 - `lighting_zones[]` -- each zone's mode and color
 - `solar_systems[]` -- each solar system's mode and set_temperature
@@ -472,7 +472,7 @@ All support `--yes` to skip the confirmation prompt.
 
 ### Setting filter pump mode
 
-The API only supports cycling through pump modes (action 1), not setting a specific mode directly. Multi-speed pumps cycle in this order: Off → On → Auto → Low → Medium → High → Off.
+The API only supports cycling through pump modes (action 1), not setting a specific mode directly. Multi-speed pumps cycle in this order: Off → Auto → On → Low → Medium → High → Off.
 
 Use `pump-set` to automatically cycle to a target mode:
 
@@ -524,6 +524,6 @@ Three helper scripts are available in the skill's parent project:
 - The pool controller communicates with ConnectMyPool on a schedule (not real-time). After sending an action, changes may take up to 60 seconds to be reflected in pool status.
 - If you get error code 6 (throttle), wait 60 seconds before retrying.
 - After any action is sent successfully, the throttle is lifted for 5 minutes, allowing rapid status checks.
-- Channel mode cycling (action 1) rotates through available modes for that channel type. The API does NOT let you set a specific mode directly — you can only cycle to the next one. For multi-speed pumps the cycle order is: Off → On → Auto → Low → Medium → High → Off. To reach a target mode, check the current mode via `pool-status.sh`, count how many cycles are needed, and send that many cycle commands (with a ~5s pause between each). Always verify the final mode with another status check.
+- Channel mode cycling (action 1) rotates through available modes for that channel type. The API does NOT let you set a specific mode directly — you can only cycle to the next one. For multi-speed pumps the cycle order is: Off → Auto → On → Low → Medium → High → Off. Use `pump-set` instead of raw cycling — it calculates the steps automatically.
 - `active_favourite` of 255 means no favourite is currently active.
 - For combined pool/spa systems, heater `set_temperature` is the pool target and `spa_set_temperature` is the spa target. Which one is active depends on `pool_spa_selection`.
