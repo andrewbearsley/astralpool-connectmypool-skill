@@ -1,7 +1,7 @@
 ---
 name: pool-monitor
 description: Monitor and control the pool via ConnectMyPool API (AstralPool Viron).
-version: 1.3.0
+version: 2.1.0
 homepage: https://github.com/andrewbearsley/astralpool-connectmypool-skill
 metadata: {"openclaw": {"requires": {"bins": ["curl", "jq", "python3"], "env": ["POOL_API_CODE", "POOL_WEB_USER", "POOL_WEB_PASS"]}, "primaryEnv": "POOL_API_CODE"}}
 ---
