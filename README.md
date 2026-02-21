@@ -1,5 +1,8 @@
 # AI agent skill for AstralPool ConnectMyPool
 
+![Format](https://img.shields.io/badge/format-Agent%20Skill-blue)
+![License](https://img.shields.io/github/license/andrewbearsley/astralpool-connectmypool-skill)
+
 Control and monitor AstralPool Viron pool/spa systems via the [ConnectMyPool](https://www.connectmypool.com.au) API. Built as an [OpenClaw](https://openclaw.ai) skill, but the scripts work fine standalone too.
 
 The ConnectMyPool REST API covers temperature, heaters, pumps, valves, and lighting. The chemistry readings (pH and ORP) are available through the web dashboard. This skill handles both: REST API for the fast stuff, headless web scraping for chemistry.
