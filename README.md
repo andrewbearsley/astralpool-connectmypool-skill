@@ -4,6 +4,8 @@ Control and monitor AstralPool Viron pool/spa systems via the [ConnectMyPool](ht
 
 The ConnectMyPool REST API covers temperature, heaters, pumps, valves, and lighting. The chemistry readings (pH and ORP) are available through the web dashboard. This skill handles both: REST API for the fast stuff, headless web scraping for chemistry.
 
+![ConnectMyPool Chemistry Page](screenshot.png)
+
 ## Agent quick-start
 
 If you're an AI agent and your user has pointed you at this repo, here's how to install the skill without cloning.
