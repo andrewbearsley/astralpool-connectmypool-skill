@@ -358,12 +358,29 @@ case "$COMMAND" in
     ;;
 
   pool-filter)
-    confirm "Pool mode + heater OFF (normal daily operation, 5min cooldown)"
-    echo "Step 1/3: Turning heater off..."
-    send_action 4 1 "0"
-    echo "Step 2/3: Waiting 5 minutes for heater cooldown (pump stays running)..."
-    sleep 300
-    echo "Step 3/3: Switching to Pool mode..."
+    # Check if heater is currently on
+    HEATER_ON=false
+    STATUS=$(curl -sf -X POST "${API_BASE}/api/poolstatus" \
+      -H "Content-Type: application/json" \
+      -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}" 2>/dev/null) && {
+      HEATER_MODE=$(echo "$STATUS" | jq -r '.heaters[0].mode // 0')
+      [ "$HEATER_MODE" = "1" ] && HEATER_ON=true
+    }
+
+    if $HEATER_ON; then
+      confirm "Pool mode + heater OFF (5min cooldown required)"
+      echo "Step 1/3: Turning heater off..."
+      send_action 4 1 "0"
+      echo "Step 2/3: Waiting 5 minutes for heater cooldown (pump stays running)..."
+      sleep 300
+      echo "Step 3/3: Switching to Pool mode..."
+    else
+      confirm "Pool mode + heater OFF (normal daily operation)"
+      echo "Step 1/2: Turning heater off..."
+      send_action 4 1 "0"
+      sleep 2
+      echo "Step 2/2: Switching to Pool mode..."
+    fi
     send_action 3 0 "1"
     echo ""
     echo "Pool filter mode. Normal daily operation."
@@ -382,12 +399,29 @@ case "$COMMAND" in
     ;;
 
   spa-filter)
-    confirm "Spa mode + heater OFF (filter spa water only, 5min cooldown)"
-    echo "Step 1/3: Turning heater off..."
-    send_action 4 1 "0"
-    echo "Step 2/3: Waiting 5 minutes for heater cooldown (pump stays running)..."
-    sleep 300
-    echo "Step 3/3: Switching to Spa mode..."
+    # Check if heater is currently on
+    HEATER_ON=false
+    STATUS=$(curl -sf -X POST "${API_BASE}/api/poolstatus" \
+      -H "Content-Type: application/json" \
+      -d "{\"pool_api_code\": \"${POOL_API_CODE}\", \"temperature_scale\": 0}" 2>/dev/null) && {
+      HEATER_MODE=$(echo "$STATUS" | jq -r '.heaters[0].mode // 0')
+      [ "$HEATER_MODE" = "1" ] && HEATER_ON=true
+    }
+
+    if $HEATER_ON; then
+      confirm "Spa mode + heater OFF (5min cooldown required)"
+      echo "Step 1/3: Turning heater off..."
+      send_action 4 1 "0"
+      echo "Step 2/3: Waiting 5 minutes for heater cooldown (pump stays running)..."
+      sleep 300
+      echo "Step 3/3: Switching to Spa mode..."
+    else
+      confirm "Spa mode + heater OFF (filter spa water only)"
+      echo "Step 1/2: Turning heater off..."
+      send_action 4 1 "0"
+      sleep 2
+      echo "Step 2/2: Switching to Spa mode..."
+    fi
     send_action 3 0 "0"
     echo ""
     echo "Spa filtering active (no heating). Run '$0 pool-filter' to return to normal."

@@ -460,7 +460,9 @@ Five composite commands cover all normal operating modes:
 
 All support `--yes` to skip the confirmation prompt.
 
-**Heater cooldown:** When turning the heater off (`pool-filter`, `spa-filter`), the pump must continue running for 5 minutes to cool the heat exchanger before switching modes. The scripts handle this automatically — they turn the heater off, wait 5 minutes, then switch the pool/spa valve. This means these commands take ~5 minutes to complete. Do not skip this cooldown.
+**Heater cooldown:** When turning the heater off (`pool-filter`, `spa-filter`), the pump must continue running for 5 minutes to cool the heat exchanger before switching modes. The scripts check whether the heater is actually on first — if it's already off, the cooldown is skipped and the command completes in seconds. If the heater is on, expect ~5 minutes.
+
+**Pump mode only:** If the user just wants to change the filter pump speed/mode (e.g. "set pump to auto") without changing pool/spa mode or heater, use `pump-set` directly — don't run `pool-filter`. Example: `scripts/pool-action.sh pump-set 0 auto`
 
 **Important notes:**
 - Always confirm with the user before running any mode change.
