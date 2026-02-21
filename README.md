@@ -1,6 +1,8 @@
 # AI agent skill for AstralPool ConnectMyPool
 
 ![Format](https://img.shields.io/badge/format-Agent%20Skill-blue)
+![Bash](https://img.shields.io/badge/bash-%23121011?logo=gnu-bash&logoColor=white)
+![Python 3](https://img.shields.io/badge/python%203-%233776AB?logo=python&logoColor=white)
 ![License](https://img.shields.io/github/license/andrewbearsley/astralpool-connectmypool-skill)
 
 Control and monitor AstralPool Viron pool/spa systems via the [ConnectMyPool](https://www.connectmypool.com.au) API. Built as an [OpenClaw](https://openclaw.ai) skill, but the scripts work fine standalone too.
