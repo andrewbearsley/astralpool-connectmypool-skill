@@ -157,7 +157,7 @@ check_action_status() {
 }
 
 mode_to_value() {
-  case "${1,,}" in
+  case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
     off|0) echo "0" ;;
     auto|1) echo "1" ;;
     on|2) echo "2" ;;
@@ -202,8 +202,8 @@ case "$COMMAND" in
 
   pump-set)
     CHANNEL="${ARGS[1]:?Usage: $0 pump-set <channel_number> <off|on|auto|low|medium|high>}"
-    TARGET_STR="${ARGS[2]:?Usage: $0 pump-set <channel_number> <off|on|auto|low|medium|high>}"
-    case "${TARGET_STR,,}" in
+    TARGET_STR=$(echo "${ARGS[2]:?Usage: $0 pump-set <channel_number> <off|on|auto|low|medium|high>}" | tr '[:upper:]' '[:lower:]')
+    case "$TARGET_STR" in
       off)    TARGET_MODE=0 ;;
       auto)   TARGET_MODE=1 ;;
       on)     TARGET_MODE=2 ;;
@@ -231,29 +231,44 @@ case "$COMMAND" in
     fi
 
     # Cycle order: 0(Off) -> 2(On) -> 1(Auto) -> 3(Low) -> 4(Medium) -> 5(High) -> 0(Off)
-    CYCLE_ORDER=(0 2 1 3 4 5)
-    # Find positions in cycle
-    CURRENT_POS=-1
-    TARGET_POS=-1
-    for i in "${!CYCLE_ORDER[@]}"; do
-      [ "${CYCLE_ORDER[$i]}" -eq "$CURRENT_MODE" ] && CURRENT_POS=$i
-      [ "${CYCLE_ORDER[$i]}" -eq "$TARGET_MODE" ] && TARGET_POS=$i
-    done
+    # Map each mode value to its position in the cycle
+    cycle_pos() {
+      case "$1" in
+        0) echo 0 ;; # Off
+        2) echo 1 ;; # On
+        1) echo 2 ;; # Auto
+        3) echo 3 ;; # Low
+        4) echo 4 ;; # Medium
+        5) echo 5 ;; # High
+        *) echo -1 ;;
+      esac
+    }
+
+    mode_name() {
+      case "$1" in
+        0) echo "Off" ;; 1) echo "Auto" ;; 2) echo "On" ;;
+        3) echo "Low Speed" ;; 4) echo "Medium Speed" ;; 5) echo "High Speed" ;;
+        *) echo "Unknown" ;;
+      esac
+    }
+
+    CURRENT_POS=$(cycle_pos "$CURRENT_MODE")
+    TARGET_POS=$(cycle_pos "$TARGET_MODE")
 
     if [ "$CURRENT_POS" -lt 0 ]; then
       echo "Error: Current mode ($CURRENT_MODE) not recognised in cycle order" >&2; exit 1
     fi
 
-    CYCLE_LEN=${#CYCLE_ORDER[@]}
-    STEPS=$(( (TARGET_POS - CURRENT_POS + CYCLE_LEN) % CYCLE_LEN ))
+    STEPS=$(( (TARGET_POS - CURRENT_POS + 6) % 6 ))
 
-    MODE_NAMES=(Off Auto On "Low Speed" "Medium Speed" "High Speed")
-    confirm "Cycle channel $CHANNEL from ${MODE_NAMES[$CURRENT_MODE]} to ${TARGET_STR} ($STEPS cycle(s))"
+    confirm "Cycle channel $CHANNEL from $(mode_name "$CURRENT_MODE") to ${TARGET_STR} ($STEPS cycle(s))"
 
-    for ((i=1; i<=STEPS; i++)); do
-      echo "Cycle $i/$STEPS..."
+    STEP=1
+    while [ "$STEP" -le "$STEPS" ]; do
+      echo "Cycle $STEP/$STEPS..."
       send_action 1 "$CHANNEL" ""
-      [ "$i" -lt "$STEPS" ] && sleep 5
+      [ "$STEP" -lt "$STEPS" ] && sleep 5
+      STEP=$((STEP + 1))
     done
 
     echo ""
